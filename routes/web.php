@@ -15,9 +15,18 @@ use Illuminate\Support\Facades\Artisan;
 |
 */
 
-Route::get('/mysql', function () {
-    Artisan::call('migrate:fresh --seed');
-  });
+Route::get('/fresh', function () {
+    Artisan::call('migrate:fresh', [
+        '--force' => true
+     ]);
+    Artisan::call('db:seed', [
+        '--force' => true
+     ]);
+});
+
+Route::get('/config-clear', function () {
+    Artisan::call('config:clear');
+});
 Route::get('/',[PostController::class,'index']);
 
 Route::get('/create',function(){
