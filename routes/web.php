@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PostController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,7 +15,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-
+Route::get('/mysql', function () {
+    Artisan::call('migrate:fresh --seed');
+  });
 Route::get('/',[PostController::class,'index']);
 
 Route::get('/create',function(){
