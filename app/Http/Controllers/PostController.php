@@ -68,19 +68,14 @@ class PostController extends Controller
                     $storageBucketName = config('googlecloud.storage_bucket');
                     $bucket = $storage->bucket($storageBucketName);
 
-                    $filename = pathinfo($imageName, PATHINFO_FILENAME);
-                    $extension = $request->file('images')->getClientOriginalExtension();
-                    $filenameSimpan = $filename . '_' . time() . '.' . $extension;
-                    $savepath = 'images/' . $filenameSimpan;
-
-                    $fileSource = fopen(storage_path('app/public/' . $savepath), 'r');
+                    $fileSource = fopen(storage_path('app/public/' . $file), 'r');
     
+                    Image::create($request->all());
+
                     $bucket->upload($fileSource, [
                     'predefinedAcl' => 'publicRead',
-                    'name' => $savepath
+                    'name' => $file
                     ]);
-
-                    Image::create($request->all());
 
                 }
             }
