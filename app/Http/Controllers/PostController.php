@@ -53,23 +53,11 @@ class PostController extends Controller
            $post->save();
         }
 
-            if($request->hasFile("images")){
-                $files=$request->file("images");
-                foreach($files as $file){
-                    $imageName=time().'_'.$file->getClientOriginalName();
-                    $request['post_id']=$post->id;
-                    $request['image']=$imageName;
-                    $file->move(\public_path("/images"),$imageName);
-                    Image::create($request->all());
+        if ($request->hasFile('images')) {
 
-                }
-            }
-
-            if ($request->hasFile('images')) {
-
-                // config with gcp
-                $googleConfigFile = file_get_contents(config_path('googlecloud.json'));
-                $storage = new StorageClient([
+            // config with gcp
+            $googleConfigFile = file_get_contents(config_path('googlecloud.json'));
+            $storage = new StorageClient([
                     'keyFile' => json_decode($googleConfigFile, true)
                 ]);
                 $storageBucketName = config('googlecloud.storage_bucket');
