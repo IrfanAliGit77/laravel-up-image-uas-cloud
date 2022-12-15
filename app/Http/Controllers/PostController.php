@@ -159,22 +159,23 @@ class PostController extends Controller
          $file->move(\public_path("/cover"),$post->cover);
          $request['cover']=$post->cover;
 
-         $filename = pathinfo($post, PATHINFO_FILENAME);
-         $extension = $request->file("cover")->getClientOriginalExtension();
+         $filenameWithExt = $request->file('foto')->getClientOriginalName();
+         $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+         $extension = $request->file('foto')->getClientOriginalExtension();
          $filenameSimpan = $filename . '_' . time() . '.' . $extension;
-         $path = $request->file("cover")->storeAs("public/images", $filenameSimpan);
+         $path = $request->file('foto')->storeAs('public/images', $filenameSimpan);
          $savepath = 'images/' . $filenameSimpan;
 
 
          // save on bucket
-         $fileSource = fopen(storage_path("app/public/" . $savepath), 'r');
+         $fileSource = fopen(storage_path('app/public/' . $savepath), 'r');
 
          $bucket->upload($fileSource, [
              'predefinedAcl' => 'publicRead',
              'name' => $savepath
          ]);
 
-         $post->update([
+        $post->update([
             "title" =>$request->title,
             "author"=>$request->author,
             "body"=>$request->body,
@@ -186,9 +187,6 @@ class PostController extends Controller
 
          // save
          $post->save();
-         
- 
-         
          
         } else {
             // tidak ada file yang diupload
