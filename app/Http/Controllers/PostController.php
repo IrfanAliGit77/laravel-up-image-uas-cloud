@@ -7,6 +7,7 @@ use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Google\Cloud\Storage\StorageClient;
+include __DIR__.'/vendor/autoload.php'; 
 
 class PostController extends Controller
 {
@@ -39,6 +40,7 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
+        
         if($request->hasFile("cover")){
             // $file=$request->file("cover");
             // $imageName=time().'_'.$file->getClientOriginalName();
