@@ -133,8 +133,10 @@ class PostController extends Controller
      */
     public function update(Request $request,$id)
     {
-     $post=Post::findOrFail($id);
-     $storage = new StorageClient();
+     $post = Post::where('id', $id)->first();
+     $storage = new StorageClient([
+        'keyFilePath' => public_path('key.json')
+    ]);
      $bucketName = env('GOOGLE_CLOUD_BUCKET');
      $bucket = $storage->bucket($bucketName);
      $object = $bucket->object($post->cover);
@@ -145,19 +147,19 @@ class PostController extends Controller
 
         $object->delete();
         //  $post->cover=time()."_".$file->getClientOriginalName();
-        $filenamewithextension = pathinfo($request->file('foto')->getClientOriginalName(), PATHINFO_FILENAME);
-        // $filenamewithextension = $request->file('foto')->getClientOriginalName();
+        $filenamewithextension = pathinfo($request->file('cover')->getClientOriginalName(), PATHINFO_FILENAME);
+        // $filenamewithextension = $request->file('cover')->getClientOriginalName();
 
         //get filename without extension
         $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
 
         //get file extension
-        $extension = $request->file('foto')->getClientOriginalExtension();
+        $extension = $request->file('cover')->getClientOriginalExtension();
 
         //filename to store
         $filenametostore = $filename . '_' . uniqid() . '.' . $extension;
 
-        Storage::put('public/uploads/' . $filenametostore, fopen($request->file('foto'), 'r+'));
+        Storage::put('public/uploads/' . $filenametostore, fopen($request->file('cover'), 'r+'));
 
         $filepath = storage_path('app/public/uploads/' . $filenametostore);
 
