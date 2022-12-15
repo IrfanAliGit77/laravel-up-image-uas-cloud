@@ -39,7 +39,6 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        
         if($request->hasFile("cover")){
             // $file=$request->file("cover");
             // $imageName=time().'_'.$file->getClientOriginalName();
@@ -58,21 +57,21 @@ class PostController extends Controller
             $filenameSimpan = $imageName . '_' . time() . '.' . $extension;
             $savepath = 'cover/' . $filenameSimpan;
 
-            $fileSource = fopen(public_path('/storage/' . $savepath), 'r');
+            $fileSource = fopen(storage_path('app/public/' . $savepath), 'r');
 
             $bucket->upload($fileSource, [
             'predefinedAcl' => 'publicRead',
              'name' => $savepath
             ]);
 
-            $post =new Post([
+            $post = new Post([
                 "title" =>$request->title,
                 "author" =>$request->author,
                 "body" =>$request->body,
                 "cover" =>$imageName,
             ]);
 
-            $post->cover = $savepath;
+            $post->cover= $savepath;
 
            $post->save();
         }
