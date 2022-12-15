@@ -56,7 +56,7 @@ class PostController extends Controller
             $extension = $request->file('cover')->getClientOriginalExtension();
             $filenameSimpan = $imageName . '_' . time() . '.' . $extension;
             $path = $request->file('cover')->storeAs('public/cover', $filenameSimpan);
-            $savepath = 'img/profile/anggota/' . $filenameSimpan;
+            $savepath = 'cover/' . $filenameSimpan;
 
             $fileSource = fopen(storage_path('app/public/' . $savepath), 'r');
 
