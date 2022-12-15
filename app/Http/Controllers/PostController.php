@@ -184,7 +184,7 @@ class PostController extends Controller
          if (File::exists("cover/".$posts->cover)) {
              File::delete("cover/".$posts->cover);
              $object = $bucket->object($posts->cover);
-             $object->delete();
+            
          }
          $images=Image::where("post_id",$posts->id)->get();
          foreach($images as $image){
@@ -192,6 +192,7 @@ class PostController extends Controller
             File::delete("images/".$image->image);
         }
          }
+         $object->delete();
          $posts->delete();
          return back();
 
