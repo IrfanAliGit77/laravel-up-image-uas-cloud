@@ -40,9 +40,30 @@ class PostController extends Controller
     public function store(Request $request)
     {
         if($request->hasFile("cover")){
-            $file=$request->file("cover");
-            $imageName=time().'_'.$file->getClientOriginalName();
-            $file->move(\public_path("cover/"),$imageName);
+            // $file=$request->file("cover");
+            // $imageName=time().'_'.$file->getClientOriginalName();
+            // $file->move(\public_path("cover/"),$imageName);
+
+            $googleConfigFile = file_get_contents(config_path('googlecloud.json'));
+             $storage = new StorageClient([
+                        'keyFile' => json_decode($googleConfigFile, true)
+             ]);
+            $storageBucketName = config('googlecloud.storage_bucket');
+            $bucket = $storage->bucket($storageBucketName);
+            
+            $filenameWithExt = $request->file('cover')->getClientOriginalName();
+            $imageName = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+            $extension = $request->file('cover')->getClientOriginalExtension();
+            $filenameSimpan = $imageName . '_' . time() . '.' . $extension;
+            $path = $request->file('cover')->storeAs('public/cover', $filenameSimpan);
+            $savepath = 'img/profile/anggota/' . $filenameSimpan;
+
+            $fileSource = fopen(storage_path('app/public/' . $savepath), 'r');
+
+            $bucket->upload($fileSource, [
+            'predefinedAcl' => 'publicRead',
+             'name' => $savepath
+            ]);
 
             $post =new Post([
                 "title" =>$request->title,
@@ -50,6 +71,7 @@ class PostController extends Controller
                 "body" =>$request->body,
                 "cover" =>$imageName,
             ]);
+
            $post->save();
         }
 
