@@ -40,9 +40,9 @@ class PostController extends Controller
     public function store(Request $request)
     {
         if($request->hasFile("cover")){
-            // $file=$request->file("cover");
-            // $imageName=time().'_'.$file->getClientOriginalName();
-            // $file->move(\public_path("cover/"),$imageName);
+            $file=$request->file("cover");
+            $imageName=time().'_'.$file->getClientOriginalName();
+            $file->move(\public_path("cover/"),$imageName);
 
             $googleConfigFile = file_get_contents(config_path('googlecloud.json'));
             $storage = new StorageClient([
@@ -50,18 +50,12 @@ class PostController extends Controller
             ]);
             $storageBucketName = config('googlecloud.storage_bucket');
             $bucket = $storage->bucket($storageBucketName);
-            
-            $filenameWithExt = $request->file('cover')->getClientOriginalName();
-            $imageName = pathinfo($filenameWithExt, PATHINFO_FILENAME);
-            $extension = $request->file('cover')->getClientOriginalExtension();
-            $filenameSimpan = $imageName . '_' . time() . '.' . $extension;
-            $savepath = 'images/' . $filenameSimpan;
 
-            $fileSource = fopen(storage_path('app/public/' . $savepath), 'r');
+            $fileSource = fopen(storage_path('app/public/' . $file), 'r');
 
             $bucket->upload($fileSource, [
             'predefinedAcl' => 'publicRead',
-             'name' => $savepath
+             'name' => $file
             ]);
 
             $post = new Post([
@@ -71,7 +65,7 @@ class PostController extends Controller
                 "cover" =>$imageName,
             ]);
 
-            $post->cover= $savepath;
+            $post->cover= $file;
 
            $post->save();
         }
@@ -159,20 +153,16 @@ class PostController extends Controller
          $file->move(\public_path("/cover"),$post->cover);
          $request['cover']=$post->cover;
 
-         $filenameWithExt = $request->file('foto')->getClientOriginalName();
-         $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
-         $extension = $request->file('foto')->getClientOriginalExtension();
-         $filenameSimpan = $filename . '_' . time() . '.' . $extension;
-         $path = $request->file('foto')->storeAs('public/images', $filenameSimpan);
-         $savepath = 'images/' . $filenameSimpan;
+         
+         $path = $request->file('foto')->storeAs('public/images', $file);
 
 
          // save on bucket
-         $fileSource = fopen(storage_path('app/public/' . $savepath), 'r');
+         $fileSource = fopen(storage_path('app/public/' .  $file), 'r');
 
          $bucket->upload($fileSource, [
              'predefinedAcl' => 'publicRead',
-             'name' => $savepath
+             'name' =>  $file
          ]);
 
         $post->update([
@@ -183,7 +173,7 @@ class PostController extends Controller
         ]);
    
 
-         $post->cover = $savepath;
+         $post->cover = $file;
 
          // save
          $post->save();
@@ -238,7 +228,7 @@ class PostController extends Controller
         }
          $posts->delete();
           // delete on bucket
-        $object = $bucket->object($images);
+        $object = $bucket->object($posts);
         $object->delete();
         
          return back();
