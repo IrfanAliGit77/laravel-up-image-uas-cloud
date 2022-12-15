@@ -140,7 +140,7 @@ class PostController extends Controller
      $bucketName = env('GOOGLE_CLOUD_BUCKET');
      $bucket = $storage->bucket($bucketName);
      $object = $bucket->object($post->cover);
-     $object->delete();
+ 
      if($request->hasFile("cover")){
         
 
@@ -170,6 +170,7 @@ class PostController extends Controller
         );
         if (File::exists("cover/".$filenametostore)) {
             File::delete("cover/".$filenametostore);
+            $object->delete();
         }
         // delete file from local disk
        // Storage::delete('public/uploads/' . $filenametostore);
