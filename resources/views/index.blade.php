@@ -40,7 +40,7 @@
                        <td>{{ $post->title }}</td>
                        <td>{{ $post->author }}</td>
                        <td>{{ $post->body }}</td>
-                       <td><img src="cover/{{ $post->cover }}" class="img-responsive" style="max-height:100px; max-width:100px" alt="" srcset=""></td>
+                       <td><img src="{{'https://storage.googleapis.com/exa-bucket-uas/'.$post->cover }}" class="img-responsive" style="max-height:100px; max-width:100px" alt="" srcset=""></td>
                        <td><a href="/edit/{{ $post->id }}" class="btn btn-outline-primary">Update</a></td>
                        <td>
                            <form action="/delete/{{ $post->id }}" method="post">
