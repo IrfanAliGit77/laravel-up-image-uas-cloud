@@ -149,6 +149,7 @@ class PostController extends Controller
          $file->move(\public_path("/cover"),$post->cover);
          $request['cover']=$post->cover;
      }
+        
 
         $post->update([
             "title" =>$request->title,
