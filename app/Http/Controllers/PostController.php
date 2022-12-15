@@ -134,21 +134,51 @@ class PostController extends Controller
     public function update(Request $request,$id)
     {
      $post=Post::findOrFail($id);
+     $storage = new StorageClient();
+     $bucketName = env('GOOGLE_CLOUD_BUCKET');
+     $bucket = $storage->bucket($bucketName);
+     $object = $bucket->object($post->cover);
      if($request->hasFile("cover")){
          if (File::exists("cover/".$post->cover)) {
              File::delete("cover/".$post->cover);
          }
+         $object->delete();
+        //  $post->cover=time()."_".$file->getClientOriginalName();
+        $filenamewithextension = pathinfo($request->file('foto')->getClientOriginalName(), PATHINFO_FILENAME);
+        // $filenamewithextension = $request->file('foto')->getClientOriginalName();
+
+        //get filename without extension
+        $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
+
+        //get file extension
+        $extension = $request->file('foto')->getClientOriginalExtension();
+
+        //filename to store
+        $filenametostore = $filename . '_' . uniqid() . '.' . $extension;
+
+        Storage::put('public/uploads/' . $filenametostore, fopen($request->file('foto'), 'r+'));
+
+        $filepath = storage_path('app/public/uploads/' . $filenametostore);
+
+        $object = $bucket->upload(
+            fopen($filepath, 'r'),
+            [
+                'predefinedAcl' => 'publicRead'
+            ]
+        );
+
+        // delete file from local disk
+        Storage::delete('public/uploads/' . $filenametostore);
          $file=$request->file("cover");
-         $post->cover=time()."_".$file->getClientOriginalName();
-         $file->move(\public_path("/cover"),$post->cover);
-         $request['cover']=$post->cover;
+         $file->move(\public_path("/cover"),$filenametostore);
+         $request['cover']=$filenametostore;
      }
 
         $post->update([
             "title" =>$request->title,
             "author"=>$request->author,
             "body"=>$request->body,
-            "cover"=>$post->cover,
+            "cover"=>$filenametostore,
         ]);
 
         if($request->hasFile("images")){
