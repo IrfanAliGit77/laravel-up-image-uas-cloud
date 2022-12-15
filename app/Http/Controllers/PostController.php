@@ -53,36 +53,36 @@ class PostController extends Controller
            $post->save();
         }
 
-        if ($request->hasFile('images')) {
+            if($request->hasFile("images")){
+                $files=$request->file("images");
+                foreach($files as $file){
+                    $imageName=time().'_'.$file->getClientOriginalName();
+                    $request['post_id']=$post->id;
+                    $request['image']=$imageName;
+                    $file->move(\public_path("/images"),$imageName);
 
-            // config with gcp
-            $googleConfigFile = file_get_contents(config_path('googlecloud.json'));
-            $storage = new StorageClient([
-                    'keyFile' => json_decode($googleConfigFile, true)
-                ]);
-                $storageBucketName = config('googlecloud.storage_bucket');
-                $bucket = $storage->bucket($storageBucketName);
+                    $googleConfigFile = file_get_contents(config_path('googlecloud.json'));
+                    $storage = new StorageClient([
+                        'keyFile' => json_decode($googleConfigFile, true)
+                    ]);
+                    $storageBucketName = config('googlecloud.storage_bucket');
+                    $bucket = $storage->bucket($storageBucketName);
+
+                    $filename = pathinfo($imageName, PATHINFO_FILENAME);
+                    $extension = $request->file('images')->getClientOriginalExtension();
+                    $filenameSimpan = $filename . '_' . time() . '.' . $extension;
+                    $savepath = 'images/' . $filenameSimpan;
+
+                    $fileSource = fopen(storage_path('app/public/' . $savepath), 'r');
     
-                // // ada file yang diupload
-                // if ($anggota->foto && $anggota->foto != 'img/profile/default.png' && file_exists(storage_path('app/public/' . $anggota->foto))) {
-                //     Storage::delete('public/' . $anggota->foto);
-                //     $bucket->object($anggota->foto)->delete();
-                // }
-                $filenameWithExt = $request->file('images')->getClientOriginalName();
-                $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
-                $extension = $request->file('images')->getClientOriginalExtension();
-                $filenameSimpan = $filename . '_' . time() . '.' . $extension;
-                $path = $request->file('images')->storeAs('public/images', $filenameSimpan);
-                $savepath = 'images/' . $filenameSimpan;
-    
-    
-                // save on bucket
-                $fileSource = fopen(storage_path('app/public/' . $savepath), 'r');
-    
-                $bucket->upload($fileSource, [
+                    $bucket->upload($fileSource, [
                     'predefinedAcl' => 'publicRead',
                     'name' => $savepath
-                ]);
+                    ]);
+
+                    Image::create($request->all());
+
+                }
             }
 
             return redirect("/");
