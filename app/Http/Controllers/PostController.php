@@ -6,6 +6,8 @@ use App\Models\Image;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Google\Cloud\Storage\StorageClient;
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -17,7 +19,7 @@ class PostController extends Controller
     public function index()
     {
         $posts=Post::all();
-        return view('index')->with('posts',$posts);
+        return view('index')->with('posts' ,$posts);
     }
 
     /**
@@ -39,15 +41,53 @@ class PostController extends Controller
     public function store(Request $request)
     {
         if($request->hasFile("cover")){
+
             $file=$request->file("cover");
-            $imageName=time().'_'.$file->getClientOriginalName();
-            $file->move(\public_path("cover/"),$imageName);
+            // $image_name = $request->file('cover');
+            // $image_name = $request->file('cover')->store('images', 'public');
+            $storage = new StorageClient([
+                'keyFilePath' => public_path('key.json')
+            ]);
+
+            $bucketName = env('GOOGLE_CLOUD_BUCKET');
+            $bucket = $storage->bucket($bucketName);
+
+            //get filename with extension
+            $filenamewithextension = pathinfo($request->file('cover')->getClientOriginalName(), PATHINFO_FILENAME);
+            // $filenamewithextension = $request->file('cover')->getClientOriginalName();
+
+            //get filename without extension
+            $filename = pathinfo($filenamewithextension, PATHINFO_FILENAME);
+
+            //get file extension
+            $extension = $request->file('cover')->getClientOriginalExtension();
+
+            //filename to store
+            $filenametostore = $filename . '_' . uniqid() . '.' . $extension;
+
+            Storage::put('public/uploads/' . $filenametostore, fopen($request->file('cover'), 'r+'));
+
+            $filepath = storage_path('app/public/uploads/' . $filenametostore);
+
+            $object = $bucket->upload(
+                fopen($filepath, 'r'),
+                [
+                    'predefinedAcl' => 'publicRead'
+                ]
+            );
+
+            // delete file from local disk
+            Storage::delete('public/uploads/' . $filenametostore);
+        
+            
+            // $imageName=time().'_'.$file->getClientOriginalName();
+            $file->move(\public_path("cover/"),$filenametostore);
 
             $post =new Post([
                 "title" =>$request->title,
                 "author" =>$request->author,
                 "body" =>$request->body,
-                "cover" =>$imageName,
+                "cover" =>$filenametostore,
             ]);
            $post->save();
         }
@@ -63,9 +103,7 @@ class PostController extends Controller
 
                 }
             }
-
             return redirect("/");
-
     }
 
     /**
