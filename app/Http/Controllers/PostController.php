@@ -55,7 +55,7 @@ class PostController extends Controller
             $imageName = pathinfo($filenameWithExt, PATHINFO_FILENAME);
             $extension = $request->file('cover')->getClientOriginalExtension();
             $filenameSimpan = $imageName . '_' . time() . '.' . $extension;
-            $savepath = 'cover/' . $filenameSimpan;
+            $savepath = 'images/' . $filenameSimpan;
 
             $fileSource = fopen(storage_path('app/public/' . $savepath), 'r');
 
@@ -137,26 +137,64 @@ class PostController extends Controller
      * @param  \App\Models\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request,$id)
-    {
+    public function update(Request $request,$id){
      $post=Post::findOrFail($id);
+
      if($request->hasFile("cover")){
+        
+        $googleConfigFile = file_get_contents(config_path('googlecloud.json'));
+        $storage = new StorageClient([
+            'keyFile' => json_decode($googleConfigFile, true)
+        ]);
+        $storageBucketName = config('googlecloud.storage_bucket');
+        $bucket = $storage->bucket($storageBucketName);
+
+
          if (File::exists("cover/".$post->cover)) {
              File::delete("cover/".$post->cover);
+             $bucket->object($post->cover)->delete();
          }
          $file=$request->file("cover");
          $post->cover=time()."_".$file->getClientOriginalName();
          $file->move(\public_path("/cover"),$post->cover);
          $request['cover']=$post->cover;
-     }
 
-        $post->update([
+         $filename = pathinfo($post, PATHINFO_FILENAME);
+         $extension = $request->file("cover")->getClientOriginalExtension();
+         $filenameSimpan = $filename . '_' . time() . '.' . $extension;
+         $path = $request->file("cover")->storeAs("public/images", $filenameSimpan);
+         $savepath = 'images/' . $filenameSimpan;
+
+
+         // save on bucket
+         $fileSource = fopen(storage_path("app/public/" . $savepath), 'r');
+
+         $bucket->upload($fileSource, [
+             'predefinedAcl' => 'publicRead',
+             'name' => $savepath
+         ]);
+
+         $post->update([
             "title" =>$request->title,
             "author"=>$request->author,
             "body"=>$request->body,
             "cover"=>$post->cover,
         ]);
+   
 
+         $post->cover = $savepath;
+
+         // save
+         $post->save();
+         
+ 
+         
+         
+        } else {
+            // tidak ada file yang diupload
+            $savepath = $post->cover;
+        }
+       
         if($request->hasFile("images")){
             $files=$request->file("images");
             foreach($files as $file){
