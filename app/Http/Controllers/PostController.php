@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Google\Cloud\Storage\StorageClient;
 use Illuminate\Support\Facades\Storage;
+use Google\Cloud\Core\Exception\NotFoundException;
 
 class PostController extends Controller
 {
