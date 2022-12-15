@@ -176,9 +176,15 @@ class PostController extends Controller
     public function destroy($id)
     {
          $posts=Post::findOrFail($id);
+         $storage = new StorageClient();
 
+         $bucketName = env('GOOGLE_CLOUD_BUCKET');
+         $bucket = $storage->bucket($bucketName);
+        
          if (File::exists("cover/".$posts->cover)) {
              File::delete("cover/".$posts->cover);
+             $object = $bucket->object($posts->cover);
+             $object->delete();
          }
          $images=Image::where("post_id",$posts->id)->get();
          foreach($images as $image){
