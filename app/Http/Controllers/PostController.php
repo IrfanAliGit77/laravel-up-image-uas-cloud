@@ -140,12 +140,11 @@ class PostController extends Controller
      $bucketName = env('GOOGLE_CLOUD_BUCKET');
      $bucket = $storage->bucket($bucketName);
      $object = $bucket->object($post->cover);
-     if($request->hasFile("cover") && $object != null){
-        //  if (File::exists("cover/".$post->cover)) {
-        //      File::delete("cover/".$post->cover);
-        //  }
+     $object->delete();
+     if($request->hasFile("cover")){
+        
 
-        $object->delete();
+       
         //  $post->cover=time()."_".$file->getClientOriginalName();
         $filenamewithextension = pathinfo($request->file('cover')->getClientOriginalName(), PATHINFO_FILENAME);
         // $filenamewithextension = $request->file('cover')->getClientOriginalName();
@@ -169,9 +168,11 @@ class PostController extends Controller
                 'predefinedAcl' => 'publicRead'
             ]
         );
-
+        if (File::exists("cover/".$filenametostore)) {
+            File::delete("cover/".$filenametostore);
+        }
         // delete file from local disk
-        Storage::delete('public/uploads/' . $filenametostore);
+       // Storage::delete('public/uploads/' . $filenametostore);
          $file=$request->file("cover");
          $file->move(\public_path("/cover"),$filenametostore);
          $request['cover']=$filenametostore;
