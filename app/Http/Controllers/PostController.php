@@ -45,9 +45,9 @@ class PostController extends Controller
             // $file->move(\public_path("cover/"),$imageName);
 
             $googleConfigFile = file_get_contents(config_path('googlecloud.json'));
-             $storage = new StorageClient([
+            $storage = new StorageClient([
                         'keyFile' => json_decode($googleConfigFile, true)
-             ]);
+            ]);
             $storageBucketName = config('googlecloud.storage_bucket');
             $bucket = $storage->bucket($storageBucketName);
             
@@ -55,10 +55,9 @@ class PostController extends Controller
             $imageName = pathinfo($filenameWithExt, PATHINFO_FILENAME);
             $extension = $request->file('cover')->getClientOriginalExtension();
             $filenameSimpan = $imageName . '_' . time() . '.' . $extension;
-            $path = $request->file('cover')->storeAs('public/cover', $filenameSimpan);
             $savepath = 'cover/' . $filenameSimpan;
 
-            $fileSource = fopen(storage_path('app/public/' . $savepath), 'r');
+            $fileSource = fopen(public_path('/storage/' . $savepath), 'r');
 
             $bucket->upload($fileSource, [
             'predefinedAcl' => 'publicRead',
@@ -71,6 +70,8 @@ class PostController extends Controller
                 "body" =>$request->body,
                 "cover" =>$imageName,
             ]);
+
+            $post->cover = $savepath;
 
            $post->save();
         }
