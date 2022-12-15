@@ -65,8 +65,6 @@ class PostController extends Controller
                 "cover" =>$imageName,
             ]);
 
-            $post->cover= $file;
-
            $post->save();
         }
 
@@ -154,7 +152,7 @@ class PostController extends Controller
          $request['cover']=$post->cover;
 
          
-         $path = $request->file('foto')->storeAs('public/images', $file);
+         $path = $request->file('cover')->storeAs('public/cover', $file);
 
 
          // save on bucket
@@ -171,9 +169,6 @@ class PostController extends Controller
             "body"=>$request->body,
             "cover"=>$post->cover,
         ]);
-   
-
-         $post->cover = $file;
 
          // save
          $post->save();
