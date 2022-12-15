@@ -7,7 +7,6 @@ use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Google\Cloud\Storage\StorageClient;
-include __DIR__.'/vendor/autoload.php'; 
 
 class PostController extends Controller
 {
