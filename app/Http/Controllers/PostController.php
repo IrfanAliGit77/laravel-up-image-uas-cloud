@@ -139,9 +139,10 @@ class PostController extends Controller
      $bucket = $storage->bucket($bucketName);
      $object = $bucket->object($post->cover);
      if($request->hasFile("cover")){
-         if (File::exists("cover/".$post->cover)) {
-             File::delete("cover/".$post->cover);
-         }
+        //  if (File::exists("cover/".$post->cover)) {
+        //      File::delete("cover/".$post->cover);
+        //  }
+        if ($request->file('cover') && $object != null) {
          $object->delete();
         //  $post->cover=time()."_".$file->getClientOriginalName();
         $filenamewithextension = pathinfo($request->file('foto')->getClientOriginalName(), PATHINFO_FILENAME);
@@ -173,6 +174,7 @@ class PostController extends Controller
          $file->move(\public_path("/cover"),$filenametostore);
          $request['cover']=$filenametostore;
      }
+    }
 
         $post->update([
             "title" =>$request->title,
