@@ -178,9 +178,6 @@ class PostController extends Controller
          // save
          $post->save();
          
-        } else {
-            // tidak ada file yang diupload
-            $savepath = $post->cover;
         }
        
         if($request->hasFile("images")){
