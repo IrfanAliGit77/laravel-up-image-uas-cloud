@@ -6,7 +6,6 @@ use App\Models\Image;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
-use Google\Cloud\Storage\StorageClient;
 
 class PostController extends Controller
 {
@@ -44,27 +43,12 @@ class PostController extends Controller
             $imageName=time().'_'.$file->getClientOriginalName();
             $file->move(\public_path("cover/"),$imageName);
 
-            $googleConfigFile = file_get_contents(config_path('googlecloud.json'));
-            $storage = new StorageClient([
-                        'keyFile' => json_decode($googleConfigFile, true)
-            ]);
-            $storageBucketName = config('googlecloud.storage_bucket');
-            $bucket = $storage->bucket($storageBucketName);
-
-            $fileSource = fopen(storage_path('app/public/' . $file), 'r');
-
-            $bucket->upload($fileSource, [
-            'predefinedAcl' => 'publicRead',
-             'name' => $file
-            ]);
-
-            $post = new Post([
+            $post =new Post([
                 "title" =>$request->title,
                 "author" =>$request->author,
                 "body" =>$request->body,
                 "cover" =>$imageName,
             ]);
-
            $post->save();
         }
 
@@ -75,22 +59,7 @@ class PostController extends Controller
                     $request['post_id']=$post->id;
                     $request['image']=$imageName;
                     $file->move(\public_path("/images"),$imageName);
-
-                    $googleConfigFile = file_get_contents(config_path('googlecloud.json'));
-                    $storage = new StorageClient([
-                        'keyFile' => json_decode($googleConfigFile, true)
-                    ]);
-                    $storageBucketName = config('googlecloud.storage_bucket');
-                    $bucket = $storage->bucket($storageBucketName);
-
-                    $fileSource = fopen(storage_path('app/public/' . $file), 'r');
-    
                     Image::create($request->all());
-
-                    $bucket->upload($fileSource, [
-                    'predefinedAcl' => 'publicRead',
-                    'name' => $file
-                    ]);
 
                 }
             }
@@ -129,39 +98,18 @@ class PostController extends Controller
      * @param  \App\Models\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request,$id){
+    public function update(Request $request,$id)
+    {
      $post=Post::findOrFail($id);
-
      if($request->hasFile("cover")){
-        
-        $googleConfigFile = file_get_contents(config_path('googlecloud.json'));
-        $storage = new StorageClient([
-            'keyFile' => json_decode($googleConfigFile, true)
-        ]);
-        $storageBucketName = config('googlecloud.storage_bucket');
-        $bucket = $storage->bucket($storageBucketName);
-
-
          if (File::exists("cover/".$post->cover)) {
              File::delete("cover/".$post->cover);
-             $bucket->object($post->cover)->delete();
          }
          $file=$request->file("cover");
          $post->cover=time()."_".$file->getClientOriginalName();
          $file->move(\public_path("/cover"),$post->cover);
          $request['cover']=$post->cover;
-
-         
-         $path = $request->file('cover')->storeAs('public/cover', $file);
-
-
-         // save on bucket
-         $fileSource = fopen(storage_path('app/public/' .  $file), 'r');
-
-         $bucket->upload($fileSource, [
-             'predefinedAcl' => 'publicRead',
-             'name' =>  $file
-         ]);
+     }
 
         $post->update([
             "title" =>$request->title,
@@ -170,11 +118,6 @@ class PostController extends Controller
             "cover"=>$post->cover,
         ]);
 
-         // save
-         $post->save();
-         
-        }
-       
         if($request->hasFile("images")){
             $files=$request->file("images");
             foreach($files as $file){
@@ -201,14 +144,6 @@ class PostController extends Controller
     {
          $posts=Post::findOrFail($id);
 
-        // config with gcp
-        $googleConfigFile = file_get_contents(config_path('googlecloud.json'));
-        $storage = new StorageClient([
-            'keyFile' => json_decode($googleConfigFile, true)
-        ]);
-        $storageBucketName = config('googlecloud.storage_bucket');
-        $bucket = $storage->bucket($storageBucketName);
-
          if (File::exists("cover/".$posts->cover)) {
              File::delete("cover/".$posts->cover);
          }
@@ -216,13 +151,9 @@ class PostController extends Controller
          foreach($images as $image){
          if (File::exists("images/".$image->image)) {
             File::delete("images/".$image->image);
-            }
         }
+         }
          $posts->delete();
-          // delete on bucket
-        $object = $bucket->object($posts);
-        $object->delete();
-        
          return back();
 
 
